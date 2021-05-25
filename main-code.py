@@ -156,10 +156,10 @@ print("Dimension of our data after inverse transforming the PCA  = " + str(appro
 
 #image reconstruction using the less dimensioned data
 plt.figure(figsize=(8,4));
-n = 6177 #index value, change to view different data
+n = 6177 #index value, change to view different data. In this case,, #6177 is an image of wrist watch.
 
 
-# Original Image
+# Original Image with 4800 components
 plt.subplot(1, 2, 1);
 plt.imshow(X[n].reshape(X_train.shape[1], X_train.shape[2]),
               cmap = plt.cm.gray,);
@@ -167,7 +167,7 @@ plt.xlabel(str(X.shape[1])+' components', fontsize = 14)
 plt.title('Original Image', fontsize = 20);
 
 
-# 773 principal components
+# Check an image with shrinked 773 principal components
 plt.subplot(1, 2, 2);
 plt.imshow(approximation[n].reshape(X_train.shape[1], X_train.shape[2]),
               cmap = plt.cm.gray,);
@@ -175,11 +175,20 @@ plt.xlabel(str(Clus_dataSet.shape[1]) +' components', fontsize = 14)
 plt.title(str(variance * 100) + '% of Variance Retained', fontsize = 20);
 
 
+# Install tqdm to visualize processing time left for K-Means clustering.
+# This is not necessary, but I just like to visualize everything.
 !pip install tqdm
 import time
 from tqdm import tqdm
 
-
+# The number of initial clusters is very important in performing K-Means clustering.
+# In cases where one knows the exact number of categories of given images to cluster, that number can be used.
+# However, in reality, most datasets are not labeled as it is very expensive to do so.
+# Therefore, I am going to assume that I do not know the number of categories of my fashion images.
+# I calculated Within Cluster Sum of Squares (WCSS) and used the elbow method to deduce the best combination of the number of clusters and WCSS.
+# K-Means Clustering의 경우 클러스터 갯수 설정이 매우 중요함
+# 카테고리 수를 알고 있는 경우는 클러스터 갯수 설정을 동일하게 해주면 되지만, 이번 분석에서는 모른다고 가정하고 진행
+# Within Cluster Sum of Squares (WCSS)를 계산하여, 클러스터 갯수와 WCSS의 여러 조합중에서 최적의 클러스터 갯수를 도출
 wcss=[]
 for i in tqdm(range(1,20)): 
     kmeans = KMeans(n_clusters=i, init ='k-means++', max_iter=300,  n_init=30,random_state=0 )
@@ -187,6 +196,7 @@ for i in tqdm(range(1,20)):
     wcss.append(kmeans.inertia_)
     
 
+# A graph visualization of the elbow method.
 plt.plot(range(1,20),wcss)
 plt.title('The Elbow Method Graph')
 plt.xlabel('Number of clusters')
@@ -195,27 +205,37 @@ plt.locator_params(axis="x", nbins=20)
 plt.show()
 
 
-# #THIS CODE TAKES A LONG TIME TO RUN, IT IS TO FIND THE n_init VALUE.
-# # #We will use n_clusters = 3, not the best choice but for simplicity as the INDEX has 3 values
-# # #to check for best n_init with n_clusters = 3
+# Because the initial states of centroids (the center point of each cluster) are randomly set, the ultimate result of each K-Means depends heavily 
+# on the initial state. Therefore, initial states are set several times to minimize variances due to the randomness.
+# As derived from the above elbow method, I am going to use set 3 as the number of clusters for my data.
+# and repeatedly calculate inertia for those three clusters to deduce the best number of times for repeated initialization.
+# As this takes a long time to process, I am going to limit the number of repetitions to max 30.
 inertia = []
 for k in tqdm(range(1,30)):
     kmeans = KMeans(init = "k-means++",n_clusters=3, max_iter=300, n_init = k, random_state=1).fit(Clus_dataSet)
     inertia.append(np.sqrt(kmeans.inertia_))
 
     
+# This is the graph of the inertia by the number of initializations.
 plt.plot(range(1,30), inertia, marker='s');
 plt.xlabel('$k$')
 plt.ylabel('$J(C_k)$');
 plt.locator_params(axis="x", nbins=30)
 
 
-
+# Now I finally, have all the necessary parameters to perform K-Means clustering.
+# The number of clusters (centroids) is set to 3 and there will be 4 initializations to account for the randomness of the initial states of the centroids.
 k_means = KMeans(init = "k-means++", n_clusters = 3, n_init = 4)
 
 
-#fit the data to our k_means model
+# Fit the data to our k_means model
 k_means.fit(Clus_dataSet)
+
+
+
+
+
+
 
 
 k_means_labels = k_means.labels_ #List of labels of each dataset
