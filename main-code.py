@@ -101,15 +101,224 @@ pyplot.imshow(X_final[0])
 pyplot.show()
 
 
+# Now we are ready to perform K-Means clustering. Renamed X_final to X_train
+X_train = X_final
+
+# But before performing K-Means clustering, the images are too large in their dimensions and need to be shrinked in the dimensions
+# Import necessary libraries for K-Means clustering
+import keras
+from keras.datasets import fashion_mnist 
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+
+
+# Reshapeing X to a 2D array for PCA and then k-means
+X = X_train.reshape(-1,X_train.shape[1]*X_train.shape[2]) #We will only be using X for clustering
+X.shape
+
+
+#Visualise an image 
+n= 2
+plt.imshow(X[n].reshape(X_train.shape[1], X_train.shape[2]), cmap = plt.cm.binary)
+plt.show()
+
+
+# To perform PCA we must first change the mean to 0 and variance to 1 for X using StandardScalar
+Clus_dataSet = StandardScaler().fit_transform(X) #(mean = 0 and variance = 1)
+
+
+# Make an instance of the Model
+variance = 0.98 #The higher the explained variance the more accurate the model will remain
+pca = PCA(variance)
+
+
+#fit the data according to our PCA instance
+pca.fit(Clus_dataSet)
+
+
+print("Number of components before PCA  = " + str(X.shape[1]))
+print("Number of components after PCA 0.98 = " + str(pca.n_components_)) # Components reduced from 4800 to 773
+
+
+#Transform our data according to our PCA instance
+Clus_dataSet = pca.transform(Clus_dataSet)
+print("Dimension of our data after PCA  = " + str(Clus_dataSet.shape)) # Dimension of our data after PCA  = (44441, 773)
+
+
+#To visualise the data inversed from PCA
+approximation = pca.inverse_transform(Clus_dataSet)
+print("Dimension of our data after inverse transforming the PCA  = " + str(approximation.shape))
+# Dimension of our data after inverse transforming the PCA  = (44441, 4800)
+
+
+#image reconstruction using the less dimensioned data
+plt.figure(figsize=(8,4));
+n = 6177 #index value, change to view different data
+
+
+# Original Image
+plt.subplot(1, 2, 1);
+plt.imshow(X[n].reshape(X_train.shape[1], X_train.shape[2]),
+              cmap = plt.cm.gray,);
+plt.xlabel(str(X.shape[1])+' components', fontsize = 14)
+plt.title('Original Image', fontsize = 20);
+
+
+# 773 principal components
+plt.subplot(1, 2, 2);
+plt.imshow(approximation[n].reshape(X_train.shape[1], X_train.shape[2]),
+              cmap = plt.cm.gray,);
+plt.xlabel(str(Clus_dataSet.shape[1]) +' components', fontsize = 14)
+plt.title(str(variance * 100) + '% of Variance Retained', fontsize = 20);
+
+
+!pip install tqdm
+import time
+from tqdm import tqdm
+
+
+wcss=[]
+for i in tqdm(range(1,20)): 
+    kmeans = KMeans(n_clusters=i, init ='k-means++', max_iter=300,  n_init=30,random_state=0 )
+    kmeans.fit(Clus_dataSet)
+    wcss.append(kmeans.inertia_)
+    
+
+plt.plot(range(1,20),wcss)
+plt.title('The Elbow Method Graph')
+plt.xlabel('Number of clusters')
+plt.ylabel('WCSS')
+plt.locator_params(axis="x", nbins=20)
+plt.show()
+
+
+# #THIS CODE TAKES A LONG TIME TO RUN, IT IS TO FIND THE n_init VALUE.
+# # #We will use n_clusters = 3, not the best choice but for simplicity as the INDEX has 3 values
+# # #to check for best n_init with n_clusters = 3
+inertia = []
+for k in tqdm(range(1,30)):
+    kmeans = KMeans(init = "k-means++",n_clusters=3, max_iter=300, n_init = k, random_state=1).fit(Clus_dataSet)
+    inertia.append(np.sqrt(kmeans.inertia_))
+
+    
+plt.plot(range(1,30), inertia, marker='s');
+plt.xlabel('$k$')
+plt.ylabel('$J(C_k)$');
+plt.locator_params(axis="x", nbins=30)
 
 
 
+k_means = KMeans(init = "k-means++", n_clusters = 3, n_init = 4)
 
 
+#fit the data to our k_means model
+k_means.fit(Clus_dataSet)
 
 
+k_means_labels = k_means.labels_ #List of labels of each dataset
+print("The list of labels of the clusters are " + str(np.unique(k_means_labels)))
 
 
+G = len(np.unique(k_means_labels)) #Number of labels
+#2D matrix  for an array of indexes of the given label
+cluster_index= [[] for i in range(G)]
+for i, label in enumerate(k_means_labels,0):
+    for n in range(G):
+        if label == n:
+            cluster_index[n].append(i)
+        else:
+            continue
+            
+            
+k_means_cluster_centers = k_means.cluster_centers_ #numpy array of cluster centers
+k_means_cluster_centers.shape #comes from 10 clusters and 420 features
+
+
+#cluster visualisation
+my_members = (k_means_labels == 0) #Enter different Cluster number to view its 3D plot
+my_members.shape
+fig = plt.figure(figsize=(15, 10))
+ax = fig.add_subplot(1,1,1,projection='3d')
+#Clus_dataSet.shape
+#Clus_dataSet[my_members,300].shape
+ax.plot(Clus_dataSet[my_members, 0], Clus_dataSet[my_members,1],Clus_dataSet[my_members,2], 'w', markerfacecolor="blue", marker='.',markersize=10)
+
+
+#cluster visualisation
+my_members = (k_means_labels == 1) #Enter different Cluster number to view its 3D plot
+my_members.shape
+fig = plt.figure(figsize=(15, 10))
+ax = fig.add_subplot(1,1,1,projection='3d')
+#Clus_dataSet.shape
+#Clus_dataSet[my_members,300].shape
+ax.plot(Clus_dataSet[my_members, 0], Clus_dataSet[my_members,1],Clus_dataSet[my_members,2], 'w', markerfacecolor="blue", marker='.',markersize=10)
+
+
+#cluster visualisation
+my_members = (k_means_labels == 2) #Enter different Cluster number to view its 3D plot
+my_members.shape
+fig = plt.figure(figsize=(15, 10))
+ax = fig.add_subplot(1,1,1,projection='3d')
+#Clus_dataSet.shape
+#Clus_dataSet[my_members,300].shape
+ax.plot(Clus_dataSet[my_members, 0], Clus_dataSet[my_members,1],Clus_dataSet[my_members,2], 'w', markerfacecolor="blue", marker='.',markersize=10)
+
+
+# !pip install chart_studio 
+# !pip install plotly
+
+
+import plotly as py
+import plotly.graph_objs as go
+import plotly.express as px
+
+
+#3D Plotly Visualisation of Clusters using go
+
+layout = go.Layout(
+    title='<b>Cluster Visualisation</b>',
+    yaxis=dict(
+        title='<i>Y</i>'
+    ),
+    xaxis=dict(
+        title='<i>X</i>'
+    )
+)
+colors = ['red','green' ,'blue',]
+trace = [ go.Scatter3d() for _ in range(11)]
+for i in range(0,3):
+    my_members = (k_means_labels == i)
+    index = [h for h, g in enumerate(my_members) if g]
+    trace[i] = go.Scatter3d(
+            x=Clus_dataSet[my_members, 0],
+            y=Clus_dataSet[my_members, 1],
+            z=Clus_dataSet[my_members, 2],
+            mode='markers',
+            marker = dict(size = 2,color = colors[i]),
+            hovertext=index,
+            name='Cluster'+str(i),
+            )
+fig = go.Figure(data=[trace[0],trace[1],trace[2]], layout=layout)
+py.offline.iplot(fig)
+
+
+#If you hover over the points in the above plots you get an index value
+n = 3264 #Use that value here to visualise the selected data
+plt.imshow(X[n].reshape(60, 80), cmap = plt.cm.binary)
+plt.show()
+
+
+#Visualisation for clusters = clust
+plt.figure(figsize=(20,20));
+clust = 0 #enter label number to visualise
+num = 100 #num of data to visualize from the cluster
+for i in range(1,num): 
+    plt.subplot(10, 10, i); #(Number of rows, Number of column per row, item number)
+    plt.imshow(X[cluster_index[clust][i+500]].reshape(X_train.shape[1], X_train.shape[2]), cmap = plt.cm.binary);
+plt.show()
 
 
 
