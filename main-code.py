@@ -126,40 +126,41 @@ plt.imshow(X[n].reshape(X_train.shape[1], X_train.shape[2]), cmap = plt.cm.binar
 plt.show()
 
 
-# To perform PCA we must first change the mean to 0 and variance to 1 for X using StandardScalar
+# To perform PCA we must first change the mean to 0 and variance to 1 for X. I used StandardScalar
 Clus_dataSet = StandardScaler().fit_transform(X) #(mean = 0 and variance = 1)
 
 
-# Make an instance of the Model
+# Make an instance of the model
 variance = 0.98 #The higher the explained variance the more accurate the model will remain
 pca = PCA(variance)
 
 
-#fit the data according to our PCA instance
+# Fit the fashion image data according to our PCA instance
 pca.fit(Clus_dataSet)
 
 
+# Check the result of PCA
 print("Number of components before PCA  = " + str(X.shape[1]))
 print("Number of components after PCA 0.98 = " + str(pca.n_components_)) # Components reduced from 4800 to 773
 
 
-#Transform our data according to our PCA instance
+# Transform our data according to our PCA instance
 Clus_dataSet = pca.transform(Clus_dataSet)
 print("Dimension of our data after PCA  = " + str(Clus_dataSet.shape)) # Dimension of our data after PCA  = (44441, 773)
 
 
-#To visualise the data inversed from PCA
+# To visualise the data inversed from PCA
 approximation = pca.inverse_transform(Clus_dataSet)
 print("Dimension of our data after inverse transforming the PCA  = " + str(approximation.shape))
 # Dimension of our data after inverse transforming the PCA  = (44441, 4800)
 
 
-#image reconstruction using the less dimensioned data
+# Image reconstruction using the less dimensioned data
 plt.figure(figsize=(8,4));
 n = 6177 #index value, change to view different data. In this case,, #6177 is an image of wrist watch.
 
 
-# Original Image with 4800 components
+# The original image with 4800 components
 plt.subplot(1, 2, 1);
 plt.imshow(X[n].reshape(X_train.shape[1], X_train.shape[2]),
               cmap = plt.cm.gray,);
@@ -223,25 +224,21 @@ plt.ylabel('$J(C_k)$');
 plt.locator_params(axis="x", nbins=30)
 
 
-# Now I finally, have all the necessary parameters to perform K-Means clustering.
+# Now I, finally, have all the necessary parameters to perform K-Means clustering.
 # The number of clusters (centroids) is set to 3 and there will be 4 initializations to account for the randomness of the initial states of the centroids.
 k_means = KMeans(init = "k-means++", n_clusters = 3, n_init = 4)
 
 
-# Fit the data to our k_means model
+# Fit the data to our k_means model. Run it.
 k_means.fit(Clus_dataSet)
 
 
-
-
-
-
-
-
-k_means_labels = k_means.labels_ #List of labels of each dataset
+# List of labels of each dataset (= each cluster). In this case, there are 3 labels because I set 3 clusters for clustering
+k_means_labels = k_means.labels_
 print("The list of labels of the clusters are " + str(np.unique(k_means_labels)))
 
 
+# Labeling the data set by clusters
 G = len(np.unique(k_means_labels)) #Number of labels
 #2D matrix  for an array of indexes of the given label
 cluster_index= [[] for i in range(G)]
@@ -252,12 +249,12 @@ for i, label in enumerate(k_means_labels,0):
         else:
             continue
             
-            
+# The shape of the 3 centroids. (3, 773)             
 k_means_cluster_centers = k_means.cluster_centers_ #numpy array of cluster centers
 k_means_cluster_centers.shape #comes from 10 clusters and 420 features
 
 
-#cluster visualisation
+#cluster 1 visualisation
 my_members = (k_means_labels == 0) #Enter different Cluster number to view its 3D plot
 my_members.shape
 fig = plt.figure(figsize=(15, 10))
@@ -267,7 +264,7 @@ ax = fig.add_subplot(1,1,1,projection='3d')
 ax.plot(Clus_dataSet[my_members, 0], Clus_dataSet[my_members,1],Clus_dataSet[my_members,2], 'w', markerfacecolor="blue", marker='.',markersize=10)
 
 
-#cluster visualisation
+#cluster 2 visualisation
 my_members = (k_means_labels == 1) #Enter different Cluster number to view its 3D plot
 my_members.shape
 fig = plt.figure(figsize=(15, 10))
@@ -277,7 +274,7 @@ ax = fig.add_subplot(1,1,1,projection='3d')
 ax.plot(Clus_dataSet[my_members, 0], Clus_dataSet[my_members,1],Clus_dataSet[my_members,2], 'w', markerfacecolor="blue", marker='.',markersize=10)
 
 
-#cluster visualisation
+#cluster 3 visualisation
 my_members = (k_means_labels == 2) #Enter different Cluster number to view its 3D plot
 my_members.shape
 fig = plt.figure(figsize=(15, 10))
@@ -291,13 +288,13 @@ ax.plot(Clus_dataSet[my_members, 0], Clus_dataSet[my_members,1],Clus_dataSet[my_
 # !pip install plotly
 
 
+# Import necessary libraries to visualize the clusters in a different way
 import plotly as py
 import plotly.graph_objs as go
 import plotly.express as px
 
 
 #3D Plotly Visualisation of Clusters using go
-
 layout = go.Layout(
     title='<b>Cluster Visualisation</b>',
     yaxis=dict(
@@ -331,7 +328,7 @@ plt.imshow(X[n].reshape(60, 80), cmap = plt.cm.binary)
 plt.show()
 
 
-#Visualisation for clusters = clust
+#Visualisation of images in a cluster
 plt.figure(figsize=(20,20));
 clust = 0 #enter label number to visualise
 num = 100 #num of data to visualize from the cluster
@@ -339,12 +336,4 @@ for i in range(1,num):
     plt.subplot(10, 10, i); #(Number of rows, Number of column per row, item number)
     plt.imshow(X[cluster_index[clust][i+500]].reshape(X_train.shape[1], X_train.shape[2]), cmap = plt.cm.binary);
 plt.show()
-
-
-
-
-
-
-
-
 
