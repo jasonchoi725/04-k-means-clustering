@@ -1,4 +1,4 @@
-# 4-k-means-clustering
+# 04-k-means-clustering
 A project classifying images of various types of clothes using K-Means clustering method.
 
 
