@@ -1,5 +1,7 @@
 # 04-k-means-clustering
 A project classifying images of various types of clothes using K-Means clustering method.
+This is the image dataset download link
+https://www.kaggle.com/paramaggarwal/fashion-product-images-small/code
 
 
 ![슬라이드01](https://user-images.githubusercontent.com/82641488/119613072-99569880-be37-11eb-9835-991f7bce5a03.jpg)
