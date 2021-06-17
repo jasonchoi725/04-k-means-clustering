@@ -1,7 +1,7 @@
 # 04-k-means-clustering
 
-ENG: A personal project. Classifies unlabeled images of clothes using K-Means clustering.  
 KOR: 개인 프로젝트. 머신러닝을 통한 unlabeled 패션 이미지 분류.
+ENG: A personal project. Classifies unlabeled images of clothes using K-Means clustering.  
 
 A project classifying images of various types of clothes using K-Means clustering method.
 This is the image dataset download link
